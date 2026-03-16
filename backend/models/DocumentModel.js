@@ -1,11 +1,10 @@
 const { pool } = require('../config/database');
-const fs = require('fs').promises;
-const path = require('path');
 
 class DocumentModel {
     // Upload document
     static async upload(userId, file, documentType = 'other') {
-        const { filename, originalname, mimetype, size, path: filePath } = file;
+        // file.path is the Cloudinary URL; originalname, mimetype, size remain the same
+        const { originalname, mimetype, size, path: filePath } = file;
 
         const [result] = await pool.query(
             `INSERT INTO user_documents 
@@ -46,7 +45,6 @@ class DocumentModel {
 
     // Delete document
     static async delete(id, userId) {
-        // Get file path first
         const [doc] = await pool.query(
             'SELECT file_path FROM user_documents WHERE id = ? AND user_id = ?',
             [id, userId]
@@ -56,20 +54,11 @@ class DocumentModel {
             throw new Error('Document not found');
         }
 
-        // Delete from database
+        // Delete from database only; Cloudinary handles cloud file management
         const [result] = await pool.query(
             'DELETE FROM user_documents WHERE id = ? AND user_id = ?',
             [id, userId]
         );
-
-        // Delete file from disk (async, don't wait)
-        if (result.affectedRows > 0) {
-            try {
-                await fs.unlink(doc[0].file_path);
-            } catch (err) {
-                console.error('Error deleting file:', err);
-            }
-        }
 
         return result.affectedRows > 0;
     }

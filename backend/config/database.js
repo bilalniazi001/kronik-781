@@ -4,6 +4,7 @@ require('dotenv').config();
 // Create connection pool
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT) || 3306,
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'attendance_management',
@@ -11,7 +12,8 @@ const pool = mysql.createPool({
     connectionLimit: 10,
     queueLimit: 0,
     enableKeepAlive: true,
-    keepAliveInitialDelay: 0
+    keepAliveInitialDelay: 0,
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : false
 });
 
 // Convert pool to use promises

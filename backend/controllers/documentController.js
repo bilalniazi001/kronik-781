@@ -1,6 +1,4 @@
 const DocumentModel = require('../models/DocumentModel');
-const path = require('path');
-const fs = require('fs');
 
 class DocumentController {
     // Upload document (as per FDC 4.2.4)
@@ -44,10 +42,8 @@ class DocumentController {
 
             res.json({
                 success: true,
-                documents: documents.map(doc => ({
-                    ...doc,
-                    file_path: `/uploads/documents/${path.basename(doc.file_path)}`
-                }))
+                // file_path is now a Cloudinary URL stored in DB
+                documents
             });
 
         } catch (error) {
@@ -55,7 +51,7 @@ class DocumentController {
         }
     }
 
-    // Download document
+    // Download / redirect to document (Cloudinary URL)
     static async downloadDocument(req, res, next) {
         try {
             const { documentId } = req.params;
@@ -77,22 +73,15 @@ class DocumentController {
                 });
             }
 
-            // Check if file exists
-            if (!fs.existsSync(document.file_path)) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'File not found on server'
-                });
-            }
-
-            res.download(document.file_path, document.file_name);
+            // Redirect to Cloudinary URL
+            res.redirect(document.file_path);
 
         } catch (error) {
             next(error);
         }
     }
 
-    // View document in browser
+    // View document in browser (redirect to Cloudinary URL)
     static async viewDocument(req, res, next) {
         try {
             const { documentId } = req.params;
@@ -114,30 +103,8 @@ class DocumentController {
                 });
             }
 
-            // Check if file exists
-            if (!fs.existsSync(document.file_path)) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'File not found on server'
-                });
-            }
-
-            // Set content type based on file type
-            const ext = path.extname(document.file_name).toLowerCase();
-            const contentTypes = {
-                '.pdf': 'application/pdf',
-                '.jpg': 'image/jpeg',
-                '.jpeg': 'image/jpeg',
-                '.png': 'image/png',
-                '.gif': 'image/gif',
-                '.doc': 'application/msword',
-                '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            };
-
-            res.setHeader('Content-Type', contentTypes[ext] || 'application/octet-stream');
-            res.setHeader('Content-Disposition', `inline; filename="${document.file_name}"`);
-            
-            fs.createReadStream(document.file_path).pipe(res);
+            // Redirect to Cloudinary URL for direct viewing
+            res.redirect(document.file_path);
 
         } catch (error) {
             next(error);

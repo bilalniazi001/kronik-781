@@ -34,8 +34,8 @@ class UserController {
                 success: true,
                 user: {
                     ...user,
-                    profile_image: (user && user.profile_image) ?
-                        `/uploads/profiles/${user.profile_image}` : null
+                    // profile_image is now a Cloudinary URL stored directly in DB
+                    profile_image: user?.profile_image || null
                 },
                 documents,
                 today_attendance: todayAttendance,
@@ -177,14 +177,15 @@ class UserController {
                 });
             }
 
-            const profileImagePath = req.file.filename;
+            // Cloudinary returns the full URL in req.file.path
+            const profileImageUrl = req.file.path;
 
-            await UserModel.update(req.userId, { profile_image: profileImagePath });
+            await UserModel.update(req.userId, { profile_image: profileImageUrl });
 
             res.json({
                 success: true,
                 message: 'Profile image uploaded successfully',
-                profile_image: `/uploads/profiles/${profileImagePath}`
+                profile_image: profileImageUrl
             });
 
         } catch (error) {
@@ -213,8 +214,8 @@ class UserController {
                 success: true,
                 user: {
                     name: user.name,
-                    profile_image: (user && user.profile_image) ?
-                        `/uploads/profiles/${user.profile_image}` : null
+                    // profile_image is a Cloudinary URL stored directly in DB
+                    profile_image: user?.profile_image || null
                 },
                 attendance: todayAttendance,
                 current_time: new Date().toISOString()

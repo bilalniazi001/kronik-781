@@ -15,6 +15,7 @@ import ReportsPage from '../pages/ReportsPage'
 import AnnouncementsPage from '../pages/AnnouncementsPage'
 import ApplyLeavePage from '../pages/ApplyLeavePage'
 import LeaveApprovalPage from '../pages/LeaveApprovalPage'
+import OrganizationTreePage from '../pages/OrganizationTreePage'
 
 // Admin Pages
 import AdminPanelPage from '../pages/AdminPanelPage'
@@ -25,7 +26,9 @@ import AdminAttendancePage from '../pages/AdminAttendancePage'
 import AdminAnnouncementsPage from '../pages/AdminAnnouncementsPage'
 import AdminAddManager from '../pages/AdminAddManager'
 import AdminAddEmployee from '../pages/AdminAddEmployee'
-import AdminAddHR from '../pages/AdminAddHR'
+import AdminAddHR from '../pages/AdminAddHR';
+import AdminCEOListPage from '../pages/AdminCEOListPage';
+import AdminAddCEO from '../pages/AdminAddCEO';
 import AdminHRListPage from '../pages/AdminHRListPage'
 import AdminManagerListPage from '../pages/AdminManagerListPage'
 import AdminEmployeeListPage from '../pages/AdminEmployeeListPage'
@@ -49,10 +52,12 @@ const AppRoutes = () => {
       <Route path="/announcements" element={<PrivateRoute><AnnouncementsPage /></PrivateRoute>} />
       <Route path="/apply-leave" element={<PrivateRoute><ApplyLeavePage /></PrivateRoute>} />
       <Route path="/leave-approvals" element={<PrivateRoute><LeaveApprovalPage /></PrivateRoute>} />
+      <Route path="/hierarchy" element={<PrivateRoute><OrganizationTreePage /></PrivateRoute>} />
 
       {/* Admin Protected Routes */}
       <Route path="/admin" element={<AdminRoute><AdminPanelPage /></AdminRoute>} />
       <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+      <Route path="/admin/ceos" element={<AdminRoute><AdminCEOListPage /></AdminRoute>} />
       <Route path="/admin/hr" element={<AdminRoute><AdminHRListPage /></AdminRoute>} />
       <Route path="/admin/managers" element={<AdminRoute><AdminManagerListPage /></AdminRoute>} />
       <Route path="/admin/employees" element={<AdminRoute><AdminEmployeeListPage /></AdminRoute>} />
@@ -63,6 +68,7 @@ const AppRoutes = () => {
       <Route path="/admin/holidays" element={<AdminRoute><HolidayCalendarPage /></AdminRoute>} />
       <Route path="/admin/add-manager" element={<AdminRoute><AdminAddManager /></AdminRoute>} />
       <Route path="/admin/add-hr" element={<AdminRoute><AdminAddHR /></AdminRoute>} />
+      <Route path="/admin/add-ceo" element={<AdminRoute><AdminAddCEO /></AdminRoute>} />
       <Route path="/admin/add-employee" element={<AdminRoute><AdminAddEmployee /></AdminRoute>} />
 
       {/* Error Routes */}

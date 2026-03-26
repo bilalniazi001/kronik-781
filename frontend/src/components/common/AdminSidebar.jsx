@@ -19,6 +19,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: HomeIcon },
+    { name: 'CEO Management', href: '/admin/ceos', icon: UsersIcon },
     { name: 'HR Management', href: '/admin/hr', icon: UsersIcon },
     { name: 'Manager Management', href: '/admin/managers', icon: UsersIcon },
     { name: 'Employee Management', href: '/admin/employees', icon: UsersIcon },

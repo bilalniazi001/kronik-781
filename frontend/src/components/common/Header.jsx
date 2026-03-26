@@ -90,6 +90,7 @@ const Header = () => {
   const navigation = [
     { name: 'Home', href: '/', icon: HomeIcon, current: location.pathname === '/' },
     { name: 'Reports', href: '/reports', icon: DocumentTextIcon, current: location.pathname === '/reports' },
+    { name: 'Organization', href: '/hierarchy', icon: UserIcon, current: location.pathname === '/hierarchy' },
     { name: 'Announcements', href: '/announcements', icon: MegaphoneIcon, current: location.pathname === '/announcements' },
     { name: 'Profile', href: '/profile', icon: UserIcon, current: location.pathname === '/profile' },
   ];

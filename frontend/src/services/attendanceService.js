@@ -48,10 +48,21 @@ const attendanceService = {
     }
   },
 
-  getTeamSummary: async (start_date, end_date) => {
+  getTeamSummary: async (start_date, end_date, type = 'employees') => {
     try {
       const response = await api.get('/attendances/team-summary', {
-        params: { start_date, end_date }
+        params: { start_date, end_date, type }
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  getManagerReports: async (start_date, end_date) => {
+    try {
+      const response = await api.get('/attendances/team-summary', {
+        params: { start_date, end_date, type: 'managers' }
       });
       return response.data;
     } catch (error) {

@@ -1,6 +1,7 @@
 const AttendanceModel = require('../models/AttendanceModel');
 const UserModel = require('../models/UserModel');
 const { getLocationDetails } = require('../utils/geolocationHelper');
+const AuthMiddleware = require('../middleware/authMiddleware');
 
 class AttendanceController {
     // Check In (as per FDC 4.3.2)
@@ -187,7 +188,8 @@ class AttendanceController {
             );
 
             const attendanceDays = monthAttendance.data.filter(a => a.status === 'completed').length;
-            const leaveDays = monthAttendance.data.filter(a => a.status === 'absent' || a.status === 'leave').length;
+            const absentDays = monthAttendance.data.filter(a => a.status === 'absent').length;
+            const leaveDays = monthAttendance.data.filter(a => a.status === 'leave').length;
             const incompleteDays = monthAttendance.data.filter(a => a.status === 'checked_in').length;
 
             // Calculate weekly hours (current week: Monday to Sunday)
@@ -225,6 +227,7 @@ class AttendanceController {
                     month: currentMonth,
                     year: currentYear,
                     attendance_days: attendanceDays,
+                    absent_days: absentDays,
                     leave_days: leaveDays,
                     incomplete_days: incompleteDays,
                     total_records: monthAttendance.total,
@@ -238,33 +241,42 @@ class AttendanceController {
         }
     }
 
-    // Get team report for managers
+    // Get team report for managers/HR
     static async getTeamReport(req, res, next) {
         try {
-            const { start_date, end_date } = req.query;
+            const { start_date, end_date, type } = req.query; 
 
-            // Re-fetch user to make sure they are manager or HR
             const user = await UserModel.findById(req.userId);
-            if (!user || (user.role_type !== 'manager' && user.role_type !== 'hr' && user.userType !== 'admin')) {
-                return res.status(403).json({ success: false, message: 'Unauthorized. Only managers or HR can view team reports.' });
+            if (!user || (user.role_type !== 'manager' && user.role_type !== 'hr' && user.role_type !== 'ceo' && user.userType !== 'admin')) {
+                return res.status(403).json({ success: false, message: 'Unauthorized. Only managers, HR, or CEO can view team reports.' });
             }
 
             const now = new Date();
             const start = start_date || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
             const end = end_date || now.toISOString().split('T')[0];
 
-            const attendance = await AttendanceModel.getTeamHistory(
-                req.userId,
-                start,
-                end,
-                100, // higher limit for team view
-                0
-            );
+            let attendance;
+            if (type === 'managers') {
+                // HR/Admin only: Get all managers
+                if (user.role_type !== 'hr' && user.role_type !== 'ceo' && user.userType !== 'admin') {
+                    return res.status(403).json({ success: false, message: 'Unauthorized. Only HR/Admin can view manager reports.' });
+                }
+                attendance = await AttendanceModel.getManagersHistory(start, end);
+            } else {
+                // Default: get employees/team
+                attendance = await AttendanceModel.getTeamHistory(
+                    req.userId,
+                    start,
+                    end,
+                    100,
+                    0
+                );
+            }
 
             res.json({
                 success: true,
-                data: attendance.data,
-                total: attendance.total
+                data: attendance.data || attendance, // Handle differences in return format if any
+                total: attendance.total || (Array.isArray(attendance) ? attendance.length : 0)
             });
 
         } catch (error) {
@@ -275,21 +287,34 @@ class AttendanceController {
     // Get team summary for managers
     static async getTeamSummary(req, res, next) {
         try {
-            const { start_date, end_date } = req.query;
+            const { start_date, end_date, type } = req.query; // type: 'employees', 'managers', or 'hr'
 
             const user = await UserModel.findById(req.userId);
-            if (!user || (user.role_type !== 'manager' && user.role_type !== 'hr' && user.userType !== 'admin')) {
-                return res.status(403).json({ success: false, message: 'Unauthorized. Only managers or HR can view team reports.' });
+            if (!user || (user.role_type !== 'manager' && user.role_type !== 'hr' && user.role_type !== 'ceo' && user.userType !== 'admin')) {
+                return res.status(403).json({ success: false, message: 'Unauthorized. Only managers, HR, or CEO can view team reports.' });
             }
 
             const now = new Date();
             const start = start_date || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
             const end = end_date || now.toISOString().split('T')[0];
 
+            let managerId = null;
+            let roleType = type === 'managers' ? 'manager' : (type === 'hr' ? 'hr' : 'employee');
+
+            // If manager, only their own team. If HR or CEO, see everyone by default.
+            if (user.role_type === 'manager') {
+                managerId = user.id;
+                roleType = 'employee'; // Managers only see their employees
+            } else if (user.role_type === 'ceo') {
+                // CEO sees everyone, type parameter determines if employees or managers list
+                managerId = null; 
+            }
+
             const summary = await AttendanceModel.getTeamSummary(
-                req.userId,
+                managerId,
                 start,
-                end
+                end,
+                roleType
             );
 
             res.json({
@@ -309,14 +334,19 @@ class AttendanceController {
             const { memberId } = req.params;
 
             const user = await UserModel.findById(req.userId);
-            if (!user || (user.role_type !== 'manager' && user.role_type !== 'hr' && user.userType !== 'admin')) {
-                return res.status(403).json({ success: false, message: 'Unauthorized. Only managers or HR can view team reports.' });
+            if (!user || (user.role_type !== 'manager' && user.role_type !== 'hr' && user.role_type !== 'ceo' && user.userType !== 'admin')) {
+                return res.status(403).json({ success: false, message: 'Unauthorized. Only managers, HR, or CEO can view team reports.' });
             }
 
-            // Ensure member actually belongs to manager
+            // Ensure member actually belongs to manager or requester has higher rank
             const member = await UserModel.findById(memberId);
-            if (!member || (user.role_type === 'manager' && member.manager_id !== user.id)) {
-                return res.status(403).json({ success: false, message: 'Unauthorized. Employee is not in your team.' });
+            if (!member) {
+                return res.status(404).json({ success: false, message: 'Employee not found.' });
+            }
+
+            const hasAccess = await AuthMiddleware.canAccessUser(user, member);
+            if (!hasAccess) {
+                return res.status(403).json({ success: false, message: 'Unauthorized. You do not have permission to view this user\'s report.' });
             }
 
             const now = new Date();
@@ -335,6 +365,37 @@ class AttendanceController {
                 success: true,
                 data: attendance.data,
                 total: attendance.total
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // Get history for a specific user
+    static async getUserHistory(req, res, next) {
+        try {
+            const { start_date, end_date, user_id } = req.query;
+            const targetUserId = user_id || req.userId;
+
+            // Import moment-timezone if not already imported
+            const moment = require('moment-timezone');
+
+            const now = moment().tz('Asia/Karachi');
+            const start = start_date || now.clone().startOf('month').format('YYYY-MM-DD');
+            const end = end_date || now.format('YYYY-MM-DD');
+
+            const history = await AttendanceModel.getUserHistory(
+                targetUserId,
+                start,
+                end,
+                req.query.limit || 31,
+                req.query.offset || 0
+            );
+
+            res.json({
+                success: true,
+                ...history
             });
 
         } catch (error) {

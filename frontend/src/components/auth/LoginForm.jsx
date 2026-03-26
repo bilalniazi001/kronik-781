@@ -64,6 +64,7 @@ const LoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState('');
   const { login } = useAuth();
   const { showSuccess, showError } = useAlert();
   const navigate = useNavigate();
@@ -75,12 +76,14 @@ const LoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLocalError('');
 
     try {
       await login(formData);
       showSuccess('Login successful!');
       navigate('/');
     } catch (error) {
+      setLocalError(error.message || 'Invalid email or password');
       showError(error.message || 'Invalid email or password');
     } finally {
       setLoading(false);
@@ -139,6 +142,12 @@ const LoginForm = () => {
               Forgot password?
             </Link>
           </div>
+
+          {localError && (
+            <div className="text-red-500 text-sm font-medium animate-pulse px-1">
+              {localError}
+            </div>
+          )}
 
           {/* Submit Button */}
           <div className="mt-8">

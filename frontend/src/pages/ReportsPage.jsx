@@ -28,7 +28,7 @@ const ReportsPage = () => {
         dateRange.startDate.toISOString().split('T')[0],
         dateRange.endDate.toISOString().split('T')[0]
       );
-    } else if (activeTab === 'team') {
+    } else if (activeTab === 'team' || activeTab === 'managers' || activeTab === 'hr') {
       if (selectedTeamMember) {
         setTeamLoading(true);
         try {
@@ -48,7 +48,8 @@ const ReportsPage = () => {
         try {
           const res = await attendanceService.getTeamSummary(
             dateRange.startDate.toISOString().split('T')[0],
-            dateRange.endDate.toISOString().split('T')[0]
+            dateRange.endDate.toISOString().split('T')[0],
+            activeTab === 'managers' ? 'managers' : (activeTab === 'hr' ? 'hr' : 'employees')
           );
           setTeamSummary(res.data || []);
         } catch (error) {
@@ -69,26 +70,26 @@ const ReportsPage = () => {
   };
 
   const handleExportPDF = () => {
-    const dataToExport = activeTab === 'team' ? (selectedTeamMember ? teamMemberReports : null) : reports;
-    if (activeTab === 'team' && !selectedTeamMember) {
-      alert("Please select a specific employee to download their detailed attendance report.");
+    const dataToExport = (activeTab === 'team' || activeTab === 'managers' || activeTab === 'hr') ? (selectedTeamMember ? teamMemberReports : null) : reports;
+    if ((activeTab === 'team' || activeTab === 'managers' || activeTab === 'hr') && !selectedTeamMember) {
+      alert("Please select a specific person to download their detailed attendance report.");
       return;
     }
     exportPDF(user, {
       start: dateRange.startDate.toLocaleDateString(),
       end: dateRange.endDate.toLocaleDateString()
-    }, activeTab === 'team' ? dataToExport : null);
+    }, (activeTab === 'team' || activeTab === 'managers' || activeTab === 'hr') ? dataToExport : null);
   };
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
-    if (tab === 'team') {
+    if (tab === 'team' || tab === 'managers' || tab === 'hr') {
       setSelectedTeamMember(null);
       setTeamMemberReports([]);
     }
   };
 
-  const showTabs = user?.role_type === 'manager' || user?.role_type === 'hr' || user?.userType === 'admin';
+  const showTabs = user?.role_type === 'manager' || user?.role_type === 'hr' || user?.role_type === 'ceo' || user?.userType === 'admin';
 
   return (
     <div className="space-y-6">
@@ -121,8 +122,32 @@ const ReportsPage = () => {
                 } whitespace-nowrap py-4 px-1 border-none font-medium text-sm transition-all duration-300 focus:outline-none`}
               style={{ backgroundColor: 'transparent', border: 'none', outline: 'none' }}
             >
-              Team Reports
+              Employee Reports
             </button>
+            {(user?.role_type === 'hr' || user?.userType === 'admin' || user?.role_type === 'ceo') && (
+              <button
+                onClick={() => handleTabChange('managers')}
+                className={`${activeTab === 'managers'
+                  ? 'text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 font-bold'
+                  : 'text-gray-500 hover:text-gray-700'
+                  } whitespace-nowrap py-4 px-1 border-none font-medium text-sm transition-all duration-300 focus:outline-none`}
+                style={{ backgroundColor: 'transparent', border: 'none', outline: 'none' }}
+              >
+                Manager Reports
+              </button>
+            )}
+            {(user?.role_type === 'ceo' || user?.userType === 'admin') && (
+              <button
+                onClick={() => handleTabChange('hr')}
+                className={`${activeTab === 'hr'
+                  ? 'text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 font-bold'
+                  : 'text-gray-500 hover:text-gray-700'
+                  } whitespace-nowrap py-4 px-1 border-none font-medium text-sm transition-all duration-300 focus:outline-none`}
+                style={{ backgroundColor: 'transparent', border: 'none', outline: 'none' }}
+              >
+                HR Reports
+              </button>
+            )}
           </nav>
         </div>
       )}
@@ -134,7 +159,7 @@ const ReportsPage = () => {
       />
 
       <div className="bg-white rounded-xl shadow-md p-6">
-        {activeTab === 'team' && selectedTeamMember ? (
+        {(activeTab === 'team' || activeTab === 'managers' || activeTab === 'hr') && selectedTeamMember ? (
           <div className="mb-4 space-y-4">
             <button
               onClick={() => setSelectedTeamMember(null)}
@@ -142,7 +167,8 @@ const ReportsPage = () => {
               style={{ outline: 'none' }}
             >
               <div className="btn-shimmer"></div>
-              Back to Team List
+              <ArrowLeftIcon className="w-4 h-4" />
+              Back to List
             </button>
             <h2 className="text-lg font-semibold text-gray-900">
               Detailed Report for <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 font-bold">{selectedTeamMember.employee_name}</span> ({dateRange.startDate.toLocaleDateString()} to {dateRange.endDate.toLocaleDateString()})
@@ -153,21 +179,22 @@ const ReportsPage = () => {
               isTeamReport={false}
             />
           </div>
-        ) : activeTab === 'team' && !selectedTeamMember ? (
+        ) : (activeTab === 'team' || activeTab === 'managers' || activeTab === 'hr') && !selectedTeamMember ? (
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Team Summary for {dateRange.startDate.toLocaleDateString()} to {dateRange.endDate.toLocaleDateString()}
+              {activeTab === 'managers' ? 'Managers' : (activeTab === 'hr' ? 'HR' : 'Employee')} Summary for {dateRange.startDate.toLocaleDateString()} to {dateRange.endDate.toLocaleDateString()}
             </h2>
             <TeamSummaryTable
               summaryList={teamSummary}
               loading={teamLoading}
               onViewReport={(emp) => setSelectedTeamMember(emp)}
+              showPersonalDetails={true}
             />
           </div>
         ) : (
           <div className="mb-4">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Reports for {dateRange.startDate.toLocaleDateString()} to {dateRange.endDate.toLocaleDateString()}
+              My Reports for {dateRange.startDate.toLocaleDateString()} to {dateRange.endDate.toLocaleDateString()}
             </h2>
             <ReportTable
               reports={reports}

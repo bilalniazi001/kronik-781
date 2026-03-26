@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const authConfig = require('../config/auth');
 const UserModel = require('../models/UserModel');
 const AdminModel = require('../models/AdminModel');
+const { getRank, RANKS } = require('../config/constants');
 
 class AuthMiddleware {
     // Verify JWT token
@@ -65,10 +66,10 @@ class AuthMiddleware {
 
     // Check if user is admin
     static isAdmin(req, res, next) {
-        if (req.userType !== 'admin' && req.user?.role_type !== 'hr') {
+        if (req.userType !== 'admin' && req.user?.role_type !== 'hr' && req.user?.role_type !== 'ceo') {
             return res.status(403).json({
                 success: false,
-                message: 'Access denied. Admin or HR access required.'
+                message: 'Access denied. Admin, HR, or CEO access required.'
             });
         }
         next();
@@ -76,10 +77,10 @@ class AuthMiddleware {
 
     // Check if user is HR
     static isHR(req, res, next) {
-        if (req.user?.role_type !== 'hr' && req.userType !== 'admin') {
+        if (req.user?.role_type !== 'hr' && req.userType !== 'admin' && req.user?.role_type !== 'ceo') {
             return res.status(403).json({
                 success: false,
-                message: 'Access denied. HR only.'
+                message: 'Access denied. HR or CEO only.'
             });
         }
         next();
@@ -87,10 +88,10 @@ class AuthMiddleware {
 
     // Check if user is Manager
     static isManager(req, res, next) {
-        if (req.user?.role_type !== 'manager' && req.user?.role_type !== 'hr' && req.userType !== 'admin') {
+        if (req.user?.role_type !== 'manager' && req.user?.role_type !== 'hr' && req.user?.role_type !== 'ceo' && req.userType !== 'admin') {
             return res.status(403).json({
                 success: false,
-                message: 'Access denied. Manager only.'
+                message: 'Access denied. Manager, HR, or CEO only.'
             });
         }
         next();
@@ -149,6 +150,23 @@ class AuthMiddleware {
             next();
         }
     }
+
+    // Check if requester has higher rank than target user
+    static async canAccessUser(requester, targetUser) {
+        if (requester.userType === 'admin') return true;
+        
+        const requesterRank = getRank(requester.role_type);
+        const targetRank = getRank(targetUser.role_type);
+
+        // Access if requester rank is strictly higher (lower number)
+        // OR if requester is the direct manager
+        if (requesterRank < targetRank) return true;
+        if (targetUser.manager_id === requester.id) return true;
+
+        return false;
+    }
 }
+
+module.exports = AuthMiddleware;
 
 module.exports = AuthMiddleware;

@@ -18,7 +18,7 @@ const AdminRoute = ({ children, requiredRole }) => {
     return <Navigate to="/admin/login" replace />
   }
 
-  if (!isAdmin && !isHR) {
+  if (!isAdmin && !isHR && !isCEO) {
     return <Navigate to="/unauthorized" replace />
   }
 

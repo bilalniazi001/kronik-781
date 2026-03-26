@@ -64,6 +64,7 @@ const AdminLoginForm = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState('');
   const { adminLogin } = useAuth();
   const { showSuccess, showError } = useAlert();
   const navigate = useNavigate();
@@ -75,12 +76,14 @@ const AdminLoginForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setLocalError('');
 
     try {
       await adminLogin(formData);
       showSuccess('Admin login successful!');
       navigate('/admin');
     } catch (error) {
+      setLocalError(error.message || 'Invalid admin credentials');
       showError(error.message || 'Invalid admin credentials');
     } finally {
       setLoading(false);
@@ -125,6 +128,12 @@ const AdminLoginForm = () => {
             showPassword={showPassword}
             onTogglePassword={() => setShowPassword(!showPassword)}
           />
+
+          {localError && (
+            <div className="text-red-500 text-sm font-medium animate-pulse px-1">
+              {localError}
+            </div>
+          )}
 
           {/* Submit Button */}
           <div className="mt-8">

@@ -18,8 +18,14 @@ const hrRoutes = require('./routes/hrRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const holidayRoutes = require('./routes/holidayRoutes');
+const hierarchyRoutes = require('./routes/hierarchyRoutes');
+const { initCronJobs } = require('./services/cronService');
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Initialize background jobs
+initCronJobs();
 
 // Security middleware
 app.use(helmet({
@@ -79,6 +85,7 @@ app.use('/api/hr', hrRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/holidays', holidayRoutes);
+app.use('/api/hierarchy', hierarchyRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

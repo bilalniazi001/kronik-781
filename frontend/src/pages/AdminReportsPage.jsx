@@ -15,6 +15,7 @@ const AdminReportsPage = () => {
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     endDate: new Date()
   });
+  const [userType, setUserType] = useState('all');
 
   const fetchInitialData = useCallback(async () => {
     try {
@@ -24,7 +25,7 @@ const AdminReportsPage = () => {
       const urlUserId = searchParams.get('userId');
 
       const [usersRes, reportsRes] = await Promise.all([
-        adminService.getUsers(1, 100),
+        adminService.getUsers(1, 100, '', userType !== 'all' ? userType : ''),
         adminService.getReports(
           new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
           new Date().toISOString().split('T')[0],
@@ -48,14 +49,23 @@ const AdminReportsPage = () => {
   const handleFilterChange = async (filters) => {
     try {
       setLoading(true);
-      setDateRange({
-        startDate: filters.startDate,
-        endDate: filters.endDate
-      });
+      if (filters.startDate) {
+        setDateRange({
+          startDate: filters.startDate,
+          endDate: filters.endDate
+        });
+      }
+      
+      if (filters.userType !== undefined) {
+        setUserType(filters.userType);
+        const usersResponse = await adminService.getUsers(1, 100, '', filters.userType !== 'all' ? filters.userType : '');
+        setUsers(usersResponse.users);
+      }
+
       const response = await adminService.getReports(
-        filters.startDate.toISOString().split('T')[0],
-        filters.endDate.toISOString().split('T')[0],
-        filters.userId !== 'all' ? filters.userId : null
+        (filters.startDate || dateRange.startDate).toISOString().split('T')[0],
+        (filters.endDate || dateRange.endDate).toISOString().split('T')[0],
+        filters.userId !== 'all' ? (filters.userId || null) : null
       );
       setReports(response.reports);
     } catch {
@@ -78,6 +88,7 @@ const AdminReportsPage = () => {
         loading={loading}
         onExportPDF={exportPDF}
         currentDateRange={dateRange}
+        currentUserType={userType}
       />
     </div>
   );

@@ -246,9 +246,19 @@ class UserController {
                 offset
             );
 
+            // Calculate summary from the full history data
+            const summary = {
+                total_days: attendance.total,
+                present_days: attendance.data.filter(a => a.status === 'completed').length,
+                absent_days: attendance.data.filter(a => a.status === 'absent').length,
+                leave_days: attendance.data.filter(a => a.status === 'leave').length,
+                incomplete_days: attendance.data.filter(a => a.status === 'checked_in').length,
+            };
+
             res.json({
                 success: true,
                 attendance: attendance.data,
+                summary,
                 pagination: {
                     current_page: parseInt(page),
                     total_pages: Math.ceil(attendance.total / limit),

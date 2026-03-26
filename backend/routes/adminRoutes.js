@@ -17,6 +17,7 @@ router.get('/users', AdminMiddleware.canManageUsers, AdminController.getUsers);
 router.get('/users/:userId', AdminMiddleware.canManageUsers, AdminController.getUserDetails);
 router.post('/users', AdminMiddleware.canManageUsers, AdminController.createUser);
 router.post('/hr', AdminMiddleware.canManageUsers, AdminController.createHR);
+router.post('/ceo', AdminMiddleware.canManageUsers, AdminController.createCEO);
 router.put('/users/:userId', AdminMiddleware.canManageUsers, AdminController.updateUser);
 router.delete('/users/:userId', AdminMiddleware.canManageUsers, AdminController.deleteUser);
 

@@ -3,7 +3,7 @@ import { MapPinIcon } from '@heroicons/react/24/outline';
 
 const ReportTable = ({ reports, loading, isTeamReport = false }) => {
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, leaveType = null) => {
     switch (status) {
       case 'completed':
         return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Present</span>;
@@ -14,7 +14,11 @@ const ReportTable = ({ reports, loading, isTeamReport = false }) => {
       case 'weekend':
         return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Weekend</span>;
       case 'leave':
-        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">Leave</span>;
+        return (
+          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800" title={leaveType}>
+            Leave {leaveType ? `(${leaveType})` : ''}
+          </span>
+        );
       default:
         return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{status || 'Unknown'}</span>;
     }
@@ -111,8 +115,8 @@ const ReportTable = ({ reports, loading, isTeamReport = false }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {reports.map((report) => (
-              <tr key={report.id} className="hover:bg-gray-50">
+            {reports.map((report, index) => (
+              <tr key={report.id || `${report.date}-${index}`} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {new Date(report.date).toLocaleDateString('en-PK', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                 </td>
@@ -141,10 +145,10 @@ const ReportTable = ({ reports, loading, isTeamReport = false }) => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {report.hours_worked || '-'}
+                  {report.status === 'leave' || report.status === 'absent' ? '-' : (report.hours_worked || '-')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {getStatusBadge(report.status)}
+                  {getStatusBadge(report.status, report.leave_type)}
                 </td>
               </tr>
             ))}

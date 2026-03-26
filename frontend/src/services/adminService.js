@@ -23,6 +23,7 @@ const adminService = {
     }
   },
 
+  getCEOs: (page, limit, search) => adminService.getUsers(page, limit, search, 'ceo'),
   getHRs: (page, limit, search) => adminService.getUsers(page, limit, search, 'hr'),
   getManagers: (page, limit, search) => adminService.getUsers(page, limit, search, 'manager'),
   getEmployees: (page, limit, search) => adminService.getUsers(page, limit, search, 'employee'),
@@ -101,6 +102,15 @@ const adminService = {
   createHR: async (formData) => {
     try {
       const response = await api.post('/admin/hr', formData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  createCEO: async (formData) => {
+    try {
+      const response = await api.post('/admin/ceo', formData);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

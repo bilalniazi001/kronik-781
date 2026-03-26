@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { DocumentArrowDownIcon, UserIcon, ArrowLeftIcon } from '@heroicons/react/24/outline';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const AdminReportView = ({ users, reports, onFilterChange, loading, onExportPDF, currentDateRange }) => {
+const AdminReportView = ({ users, reports, onFilterChange, loading, onExportPDF, currentDateRange, currentUserType }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [viewingSpecificReport, setViewingSpecificReport] = useState(false);
   const navigate = useNavigate();
@@ -51,9 +51,23 @@ const AdminReportView = ({ users, reports, onFilterChange, loading, onExportPDF,
   if (!viewingSpecificReport) {
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">Attendance Reports</h2>
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900">Attendance Reports</h2>
+        <div className="flex bg-gray-100 p-1 rounded-xl shadow-sm border border-gray-200">
+          {['all', 'employee', 'manager', 'hr'].map((type) => (
+            <button
+              key={type}
+              onClick={() => onFilterChange({ userType: type })}
+              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 ${currentUserType === type
+                  ? 'bg-white text-indigo-600 shadow-md transform scale-105'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+            >
+              {type.charAt(0).toUpperCase() + type.slice(1)}s
+            </button>
+          ))}
         </div>
+      </div>
 
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div className="overflow-x-auto">

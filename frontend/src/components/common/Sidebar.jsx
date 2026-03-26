@@ -17,6 +17,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { name: 'Dashboard', href: '/', icon: HomeIcon },
     { name: 'Profile', href: '/profile', icon: UserIcon },
     { name: 'Reports', href: '/reports', icon: DocumentTextIcon },
+    { name: 'Organization', href: '/hierarchy', icon: UserIcon },
     { name: 'Attendance', href: '/attendance', icon: ClockIcon },
     { name: 'Apply Leave', href: '/apply-leave', icon: CalendarDaysIcon },
   ]

@@ -189,6 +189,50 @@ class AdminController {
         }
     }
 
+    // Create new CEO user (admin/HR)
+    static async createCEO(req, res, next) {
+        try {
+            const { name, email, password, phone, cnic, department, designation } = req.body;
+
+            // Check if user exists
+            const existingUser = await UserModel.findByEmail(email);
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email already registered'
+                });
+            }
+
+            // Hash password
+            const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
+            const hashedPassword = await bcrypt.hash(password, salt);
+
+            // Create CEO user
+            const userId = await UserModel.create({
+                name,
+                email,
+                password: hashedPassword,
+                phone,
+                cnic,
+                role_type: 'ceo',
+                department,
+                designation
+            });
+
+            // Send welcome email
+            await EmailHelper.sendWelcomeEmail(email, name, password);
+
+            res.status(201).json({
+                success: true,
+                message: 'CEO account created successfully',
+                data: { id: userId, name, email, password }
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // Update user
     static async updateUser(req, res, next) {
         try {

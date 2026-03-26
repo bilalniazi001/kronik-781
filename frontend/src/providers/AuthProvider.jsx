@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isHR, setIsHR] = useState(false);
   const [isManager, setIsManager] = useState(false);
+  const [isCEO, setIsCEO] = useState(false);
 
   useEffect(() => {
     const initializeAuth = () => {
@@ -23,6 +24,7 @@ export const AuthProvider = ({ children }) => {
         setIsAdmin(userType === 'admin');
         setIsHR(role === 'hr');
         setIsManager(role === 'manager');
+        setIsCEO(role === 'ceo');
       } else {
         // Clear everything if state is inconsistent
         if (token || userData || userType) {
@@ -33,6 +35,7 @@ export const AuthProvider = ({ children }) => {
         setIsAdmin(false);
         setIsHR(false);
         setIsManager(false);
+        setIsCEO(false);
       }
       setLoading(false);
     };
@@ -48,6 +51,7 @@ export const AuthProvider = ({ children }) => {
     setIsAdmin(false);
     setIsHR(response.user.role_type === 'hr');
     setIsManager(response.user.role_type === 'manager');
+    setIsCEO(response.user.role_type === 'ceo');
     return response;
   };
 
@@ -66,6 +70,7 @@ export const AuthProvider = ({ children }) => {
     setIsAdmin(false);
     setIsHR(false);
     setIsManager(false);
+    setIsCEO(false);
   };
 
   const updateUser = (updatedData) => {
@@ -81,6 +86,7 @@ export const AuthProvider = ({ children }) => {
     isAdmin,
     isHR,
     isManager,
+    isCEO,
     login,
     adminLogin,
     logout,

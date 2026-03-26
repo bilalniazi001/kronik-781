@@ -244,7 +244,7 @@ const HomePage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-green-500">
           <div className="flex items-center justify-between">
             <div>
@@ -261,8 +261,8 @@ const HomePage = () => {
         <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-red-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Leave Days</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.leave_days}</p>
+              <p className="text-sm text-gray-500">Absent Days</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.absent_days}</p>
             </div>
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
               <ArrowLeftOnRectangleIcon className="w-6 h-6 text-red-600" />

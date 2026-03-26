@@ -1,1 +1,23 @@
-.vercel
+node_modules/
+.env
+dist/
+.vercel/
+*.log
+backend/error_logs.txt
+
+# Test scripts (to be ignored)
+backend/check_ceo.js
+backend/check_hierarchy.js
+backend/check_hierarchy_2.js
+backend/check_reports.js
+backend/check_status.js
+backend/list_users.js
+backend/migrate_ceo.js
+backend/test_detail.js
+backend/test_summary.js
+backend/verify_fix.js
+backend/verify_hierarchy.js
+
+# OS files
+.DS_Store
+Thumbs.db

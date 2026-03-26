@@ -188,6 +188,60 @@ class UserModel {
         );
         return rows[0];
     }
+
+    // Get full organizational hierarchy
+    static async getHierarchy() {
+        const [users] = await pool.query(
+            `SELECT id, name, email, role_type, designation, department, manager_id, profile_image 
+             FROM users WHERE status = 'active'`
+        );
+
+        // Map users by ID for quick lookup
+        const userMap = {};
+        users.forEach(u => {
+            userMap[u.id] = { ...u, children: [] };
+        });
+
+        const roots = [];
+        users.forEach(u => {
+            if (u.manager_id && userMap[u.manager_id]) {
+                userMap[u.manager_id].children.push(userMap[u.id]);
+            } else {
+                // If no manager or manager doesn't exist, it's a root
+                roots.push(userMap[u.id]);
+            }
+        });
+
+        // Special handling: Prioritize CEO as the top root, then HR.
+        if (roots.length > 1) {
+            const ceo = roots.find(r => r.role_type === 'ceo');
+            const hrs = roots.filter(r => r.role_type === 'hr');
+            
+            if (ceo) {
+                // If HRs exist, nest them under CEO
+                if (hrs.length > 0) {
+                    ceo.children.push(...hrs);
+                    
+                    // Nest all other non-CEO, non-HR roots under the first HR for compact layout
+                    const otherRoots = roots.filter(r => r.id !== ceo.id && r.role_type !== 'hr');
+                    hrs[0].children.push(...otherRoots);
+                } else {
+                    // No HR, nest all others under CEO
+                    const otherRoots = roots.filter(r => r.id !== ceo.id);
+                    ceo.children.push(...otherRoots);
+                }
+                return [ceo];
+            } else if (hrs.length > 0) {
+                // No CEO, HR is the head
+                const firstHR = hrs[0];
+                const restOfRoots = roots.filter(r => r.id !== firstHR.id);
+                firstHR.children.push(...restOfRoots);
+                return [firstHR];
+            }
+        }
+
+        return roots;
+    }
 }
 
 module.exports = UserModel;

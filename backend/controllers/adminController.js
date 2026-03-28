@@ -555,6 +555,33 @@ class AdminController {
             next(error);
         }
     }
+
+    // Test email configuration
+    static async testEmail(req, res, next) {
+        try {
+            const { email } = req.query;
+            const targetEmail = email || req.user.email;
+
+            if (!targetEmail) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Recipient email is required'
+                });
+            }
+
+            const result = await EmailHelper.sendTestEmail(targetEmail);
+
+            res.json({
+                success: result.success,
+                message: result.success ? 'Test email sent successfully' : 'Failed to send test email',
+                error: result.error || null,
+                details: result.success ? 'Check your inbox for the test email' : 'Please check your SMTP configuration in environment variables'
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = AdminController;

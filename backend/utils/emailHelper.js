@@ -52,7 +52,7 @@ class EmailHelper {
             const transporter = await createTransporter();
 
             const mailOptions = {
-                from: '"Attendly" <noreply@attendly.com>',
+                from: `"Attendly" <${process.env.EMAIL_USER || 'noreply@attendly.com'}>`,
                 to: userEmail,
                 subject: 'Welcome to Attendly - Attendance Management System',
                 html: `
@@ -127,7 +127,7 @@ class EmailHelper {
             const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
 
             const mailOptions = {
-                from: '"Attendly" <noreply@attendly.com>',
+                from: `"Attendly" <${process.env.EMAIL_USER || 'noreply@attendly.com'}>`,
                 to: userEmail,
                 subject: 'Password Reset Request - Attendly',
                 html: `
@@ -211,7 +211,7 @@ class EmailHelper {
             }
 
             const mailOptions = {
-                from: '"Attendly" <noreply@attendly.com>',
+                from: `"Attendly" <${process.env.EMAIL_USER || 'noreply@attendly.com'}>`,
                 to: userEmail,
                 subject: subject,
                 html: `
@@ -268,7 +268,7 @@ class EmailHelper {
             const transporter = await createTransporter();
 
             const mailOptions = {
-                from: '"Attendly" <reports@attendly.com>',
+                from: `"Attendly" <${process.env.EMAIL_USER || 'reports@attendly.com'}>`,
                 to: userEmail,
                 subject: `Your Attendance Report - ${reportData.month} ${reportData.year}`,
                 html: `
@@ -384,7 +384,7 @@ class EmailHelper {
             }
 
             const mailOptions = {
-                from: '"Attendly System" <system@attendly.com>',
+                from: `"Attendly System" <${process.env.EMAIL_USER || 'system@attendly.com'}>`,
                 to: adminEmail,
                 subject: subject,
                 html: `
@@ -439,7 +439,7 @@ class EmailHelper {
             const transporter = await createTransporter();
 
             const mailOptions = {
-                from: '"Attendly" <noreply@attendly.com>',
+                from: `"Attendly" <${process.env.EMAIL_USER || 'noreply@attendly.com'}>`,
                 to: testEmail,
                 subject: 'Test Email - Attendly Email Configuration',
                 html: `
@@ -485,7 +485,7 @@ class EmailHelper {
             };
 
             const mailOptions = {
-                from: '"Attendly" <hr@attendly.com>',
+                from: `"Attendly" <${process.env.EMAIL_USER || 'hr@attendly.com'}>`,
                 to: userEmail,
                 subject: `Leave Request ${status.toUpperCase()} - Attendly`,
                 html: `

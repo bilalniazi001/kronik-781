@@ -11,6 +11,7 @@ router.use(AdminMiddleware.logAction);
 
 // Dashboard
 router.get('/dashboard', AdminController.getDashboard);
+router.get('/test-email', AdminController.testEmail);
 
 // User management (accessible by all admins)
 router.get('/users', AdminMiddleware.canManageUsers, AdminController.getUsers);

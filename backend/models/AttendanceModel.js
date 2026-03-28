@@ -126,9 +126,9 @@ class AttendanceModel {
         const [user] = await pool.query('SELECT created_at, joining_date FROM users WHERE id = ?', [userId]);
         if (!user[0]) throw new Error('User not found');
         
-        const registrationDate = moment(user[0].joining_date || user[0].created_at).startOf('day');
-        const rangeStart = moment(startDate).startOf('day');
-        const rangeEnd = moment(endDate).startOf('day');
+        const registrationDate = moment(user[0].joining_date || user[0].created_at).tz('Asia/Karachi').startOf('day');
+        const rangeStart = moment(startDate).tz('Asia/Karachi').startOf('day');
+        const rangeEnd = moment(endDate).tz('Asia/Karachi').startOf('day');
         
         // Final start date is the later of requested start and registration date
         const actualStart = moment.max(registrationDate, rangeStart);
@@ -165,7 +165,7 @@ class AttendanceModel {
         // 5. Generate full history for the range
         const fullHistory = [];
         // Only count up to today or rangeEnd, whichever is earlier
-        const actualEnd = moment.min(moment().endOf('day'), rangeEnd.endOf('day'));
+        const actualEnd = moment.min(moment().tz('Asia/Karachi').endOf('day'), rangeEnd.endOf('day'));
         let currentDate = moment(actualEnd); // Start from end to match DESC order
         
         while (currentDate.isSameOrAfter(actualStart)) {
@@ -174,8 +174,8 @@ class AttendanceModel {
             
             // Check if it's a leave day first (Leave overrides Absent)
             const leave = leaveRows.find(l => 
-                currentDate.isSameOrAfter(moment(l.start_date).startOf('day')) && 
-                currentDate.isSameOrBefore(moment(l.end_date).startOf('day'))
+                currentDate.isSameOrAfter(moment(l.start_date).tz('Asia/Karachi').startOf('day')) && 
+                currentDate.isSameOrBefore(moment(l.end_date).tz('Asia/Karachi').startOf('day'))
             );
 
             if (attendanceRecord && (attendanceRecord.status === 'completed' || attendanceRecord.status === 'checked_in')) {
@@ -323,8 +323,8 @@ class AttendanceModel {
 
             // Fill leaves (only for days not already marked as present/incomplete)
             userLeaves.forEach(l => {
-                let current = moment.max(actualStart, moment(l.start_date).startOf('day'));
-                let lEnd = moment.min(actualEnd, moment(l.end_date).startOf('day'));
+                let current = moment.max(actualStart, moment(l.start_date).tz('Asia/Karachi').startOf('day'));
+                let lEnd = moment.min(actualEnd, moment(l.end_date).tz('Asia/Karachi').startOf('day'));
                 while (current.isSameOrBefore(lEnd)) {
                     const dateStr = current.format('YYYY-MM-DD');
                     const existingStatus = dateStatusMap.get(dateStr);

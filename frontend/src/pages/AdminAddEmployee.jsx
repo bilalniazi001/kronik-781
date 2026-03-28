@@ -8,7 +8,8 @@ import {
     UsersIcon,
     CalendarDaysIcon,
     PhoneIcon,
-    IdentificationIcon
+    IdentificationIcon,
+    KeyIcon
 } from '@heroicons/react/24/outline';
 import hrService from '../services/hrService';
 import { useAlert } from '../hooks/useAlert';
@@ -47,6 +48,7 @@ const AdminAddEmployee = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        password: '',
         phone: '',
         cnic: '',
         department: '',
@@ -106,8 +108,8 @@ const AdminAddEmployee = () => {
         setLoading(true);
         try {
             const payload = { ...formData, leave_quota: leaveQuota };
-            const result = await hrService.createEmployee(payload);
-            showSuccess(`Employee created successfully! Password: ${result.data.password}`);
+            await hrService.createEmployee(payload);
+            showSuccess(`Employee created successfully!`);
             navigate('/admin/users');
         } catch (error) {
             showError(error.message || 'Failed to create employee');
@@ -147,6 +149,16 @@ const AdminAddEmployee = () => {
                                 type="email"
                                 placeholder="employee@company.com"
                                 value={formData.email}
+                                onChange={handleChange}
+                            />
+
+                            <FormInput
+                                label="Initial Password"
+                                icon={KeyIcon}
+                                name="password"
+                                type="password"
+                                placeholder="Set password"
+                                value={formData.password}
                                 onChange={handleChange}
                             />
 

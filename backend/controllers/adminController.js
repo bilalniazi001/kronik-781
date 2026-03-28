@@ -120,12 +120,9 @@ class AdminController {
                 });
             }
 
-            // Generate auto-password if not provided
-            const finalPassword = password || Math.random().toString(36).slice(-8);
-            
             // Hash password
             const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
-            const hashedPassword = await bcrypt.hash(finalPassword, salt);
+            const hashedPassword = await bcrypt.hash(password, salt);
 
             // Create user
             const userId = await UserModel.create({
@@ -138,7 +135,7 @@ class AdminController {
             });
 
             // Send welcome email
-            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, finalPassword);
+            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, password);
 
             res.status(201).json({
                 success: true,
@@ -167,12 +164,9 @@ class AdminController {
                 });
             }
 
-            // Generate auto-password if not provided
-            const finalPassword = password || Math.random().toString(36).slice(-10);
-
             // Hash password
             const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
-            const hashedPassword = await bcrypt.hash(finalPassword, salt);
+            const hashedPassword = await bcrypt.hash(password, salt);
 
             // Create HR user
             const userId = await UserModel.create({
@@ -187,12 +181,12 @@ class AdminController {
             });
 
             // Send welcome email
-            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, finalPassword);
+            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, password);
 
             res.status(201).json({
                 success: true,
                 message: 'HR account created successfully',
-                data: { id: userId, name, email, password: finalPassword },
+                data: { id: userId, name, email },
                 email_sent: emailStatus.success,
                 email_error: emailStatus.success ? null : emailStatus.error
             });
@@ -216,12 +210,9 @@ class AdminController {
                 });
             }
 
-            // Generate auto-password if not provided
-            const finalPassword = password || Math.random().toString(36).slice(-10);
-
             // Hash password
             const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
-            const hashedPassword = await bcrypt.hash(finalPassword, salt);
+            const hashedPassword = await bcrypt.hash(password, salt);
 
             // Create CEO user
             const userId = await UserModel.create({
@@ -236,12 +227,12 @@ class AdminController {
             });
 
             // Send welcome email
-            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, finalPassword);
+            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, password);
 
             res.status(201).json({
                 success: true,
                 message: 'CEO account created successfully',
-                data: { id: userId, name, email, password: finalPassword },
+                data: { id: userId, name, email },
                 email_sent: emailStatus.success,
                 email_error: emailStatus.success ? null : emailStatus.error
             });
@@ -335,12 +326,9 @@ class AdminController {
                 });
             }
 
-            // Generate auto-password if not provided
-            const finalPassword = password || Math.random().toString(36).slice(-10);
-
             // Hash password
             const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
-            const hashedPassword = await bcrypt.hash(finalPassword, salt);
+            const hashedPassword = await bcrypt.hash(password, salt);
 
             // Create admin
             const adminId = await AdminModel.create({
@@ -351,7 +339,7 @@ class AdminController {
             });
 
             // Send welcome email
-            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, finalPassword);
+            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, password);
 
             res.status(201).json({
                 success: true,

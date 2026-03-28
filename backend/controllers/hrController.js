@@ -9,20 +9,20 @@ class HRController {
     // Phase 2 Step 2: Create Manager
     static async createManager(req, res, next) {
         try {
-            const { name, email, phone, cnic, department, designation } = req.body;
+            const { name, email, phone, cnic, department, designation, password } = req.body;
 
-            // Generate auto-password (or simple default)
-            const password = Math.random().toString(36).slice(-8);
+            // Hash password
             const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
             const hashedPassword = await bcrypt.hash(password, salt);
 
+            // Create manager user
             const userId = await UserModel.create({
                 name,
                 email,
                 password: hashedPassword,
-                phone: phone || '0000000000',
-                cnic: cnic || '00000-0000000-0',
                 role_type: 'manager',
+                phone,
+                cnic,
                 department,
                 designation
             });
@@ -33,7 +33,7 @@ class HRController {
             res.status(201).json({
                 success: true,
                 message: 'Manager account created successfully',
-                data: { id: userId, email, password },
+                data: { id: userId, email },
                 email_sent: emailStatus.success,
                 email_error: emailStatus.success ? null : emailStatus.error
             });
@@ -47,20 +47,21 @@ class HRController {
         try {
             const {
                 name, email, phone, cnic, department, designation,
-                manager_id, reporting_to, leave_quota
+                manager_id, reporting_to, leave_quota, password
             } = req.body;
 
-            const password = Math.random().toString(36).slice(-8);
+            // Hash password
             const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
             const hashedPassword = await bcrypt.hash(password, salt);
 
+            // Create employee user
             const userId = await UserModel.create({
                 name,
                 email,
                 password: hashedPassword,
-                phone: phone || '0000000000',
-                cnic: cnic || '00000-0000000-0',
                 role_type: 'employee',
+                phone,
+                cnic,
                 department,
                 designation,
                 manager_id,

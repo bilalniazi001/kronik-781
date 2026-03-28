@@ -6,7 +6,8 @@ import {
     BriefcaseIcon,
     BuildingOfficeIcon,
     PhoneIcon,
-    IdentificationIcon
+    IdentificationIcon,
+    KeyIcon
 } from '@heroicons/react/24/outline';
 import hrService from '../services/hrService';
 import { useAlert } from '../hooks/useAlert';
@@ -45,6 +46,7 @@ const AdminAddManager = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        password: '',
         phone: '',
         cnic: '',
         department: '',
@@ -62,8 +64,8 @@ const AdminAddManager = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            const result = await hrService.createManager(formData);
-            showSuccess(`Manager created successfully! Password: ${result.data.password}`);
+            await hrService.createManager(formData);
+            showSuccess(`Manager account created successfully!`);
             navigate('/admin/users');
         } catch (error) {
             showError(error.message || 'Failed to create manager');
@@ -102,6 +104,16 @@ const AdminAddManager = () => {
                             type="email"
                             placeholder="manager@company.com"
                             value={formData.email}
+                            onChange={handleChange}
+                        />
+
+                        <FormInput
+                            label="Initial Password"
+                            icon={KeyIcon}
+                            name="password"
+                            type="password"
+                            placeholder="Set password"
+                            value={formData.password}
                             onChange={handleChange}
                         />
 

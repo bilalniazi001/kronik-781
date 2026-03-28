@@ -354,7 +354,8 @@ CREATE TABLE `tickets` (
 -- -----------------------------------------------------
 INSERT INTO `admins` (`id`, `name`, `email`, `password`, `role`, `created_at`) VALUES 
 (4,'Super Admin','admin125@attendly.com','$2a$10$h7C5oycr/bPpbTHQVpelpeCmrvEeBY0fVUUvaLlNNxJ9yV0vSsNxG','super_admin','2026-03-09 18:09:37'),
-(5,'Onesta ','admin123@onesta.com','$2a$10$I2IjF.NDahUkj/R13m6nMeXHFxgWPkRW7YJRi0SPIQJEVUrAvBzs.','super_admin','2026-03-09 19:35:48');
+(5,'Onesta ','admin123@onesta.com','$2a$10$I2IjF.NDahUkj/R13m6nMeXHFxgWPkRW7YJRi0SPIQJEVUrAvBzs.','super_admin','2026-03-09 19:35:48'),
+(6,'Kronik Admin','admin@kronik.com','$2a$10$wSybwDVztjLBoTAH8RiUYumRhi4hp3FS4Ohb/XA.sXuRvCu.hAHZC','super_admin',NOW());
 
 INSERT INTO `leave_types` (`name`, `code`) VALUES 
 ('Sick Leave', 'SL'),

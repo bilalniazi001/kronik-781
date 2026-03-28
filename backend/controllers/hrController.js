@@ -28,12 +28,14 @@ class HRController {
             });
 
             // Send welcome email
-            await EmailHelper.sendWelcomeEmail(email, name, password);
+            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, password);
 
             res.status(201).json({
                 success: true,
                 message: 'Manager account created successfully',
-                data: { id: userId, email, password } // Temporarily returning password for testing
+                data: { id: userId, email, password },
+                email_sent: emailStatus.success,
+                email_error: emailStatus.success ? null : emailStatus.error
             });
         } catch (error) {
             next(error);
@@ -79,12 +81,14 @@ class HRController {
             }
 
             // Send welcome email
-            await EmailHelper.sendWelcomeEmail(email, name, password);
+            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, password);
 
             res.status(201).json({
                 success: true,
                 message: 'Employee account created successfully with leave quota',
-                data: { id: userId, email, password }
+                data: { id: userId, email, password },
+                email_sent: emailStatus.success,
+                email_error: emailStatus.success ? null : emailStatus.error
             });
         } catch (error) {
             next(error);

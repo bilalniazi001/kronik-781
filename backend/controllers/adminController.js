@@ -106,23 +106,12 @@ class AdminController {
         }
     }
 
-    // Create new user (admin)
-    static async createUser(req, res, next) {
-        try {
-            const { name, email, password, phone, cnic, address } = req.body;
-
-            // Check if user exists
-            const existingUser = await UserModel.findByEmail(email);
-            if (existingUser) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email already registered'
-                });
-            }
-
+            // Generate auto-password if not provided
+            const finalPassword = password || Math.random().toString(36).slice(-8);
+            
             // Hash password
             const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
-            const hashedPassword = await bcrypt.hash(password, salt);
+            const hashedPassword = await bcrypt.hash(finalPassword, salt);
 
             // Create user
             const userId = await UserModel.create({
@@ -134,10 +123,15 @@ class AdminController {
                 address
             });
 
+            // Send welcome email
+            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, finalPassword);
+
             res.status(201).json({
                 success: true,
                 message: 'User created successfully',
-                user: { id: userId, name, email }
+                user: { id: userId, name, email },
+                email_sent: emailStatus.success,
+                email_error: emailStatus.success ? null : emailStatus.error
             });
 
         } catch (error) {
@@ -145,23 +139,12 @@ class AdminController {
         }
     }
 
-    // Create new HR user (admin only)
-    static async createHR(req, res, next) {
-        try {
-            const { name, email, password, phone, cnic, department, designation } = req.body;
-
-            // Check if user exists
-            const existingUser = await UserModel.findByEmail(email);
-            if (existingUser) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email already registered'
-                });
-            }
+            // Generate auto-password if not provided
+            const finalPassword = password || Math.random().toString(36).slice(-10);
 
             // Hash password
             const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
-            const hashedPassword = await bcrypt.hash(password, salt);
+            const hashedPassword = await bcrypt.hash(finalPassword, salt);
 
             // Create HR user
             const userId = await UserModel.create({
@@ -176,12 +159,14 @@ class AdminController {
             });
 
             // Send welcome email
-            await EmailHelper.sendWelcomeEmail(email, name, password);
+            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, finalPassword);
 
             res.status(201).json({
                 success: true,
                 message: 'HR account created successfully',
-                data: { id: userId, name, email, password } // Temporarily returning password for testing
+                data: { id: userId, name, email, password: finalPassword },
+                email_sent: emailStatus.success,
+                email_error: emailStatus.success ? null : emailStatus.error
             });
 
         } catch (error) {
@@ -189,23 +174,12 @@ class AdminController {
         }
     }
 
-    // Create new CEO user (admin/HR)
-    static async createCEO(req, res, next) {
-        try {
-            const { name, email, password, phone, cnic, department, designation } = req.body;
-
-            // Check if user exists
-            const existingUser = await UserModel.findByEmail(email);
-            if (existingUser) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email already registered'
-                });
-            }
+            // Generate auto-password if not provided
+            const finalPassword = password || Math.random().toString(36).slice(-10);
 
             // Hash password
             const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
-            const hashedPassword = await bcrypt.hash(password, salt);
+            const hashedPassword = await bcrypt.hash(finalPassword, salt);
 
             // Create CEO user
             const userId = await UserModel.create({
@@ -220,12 +194,14 @@ class AdminController {
             });
 
             // Send welcome email
-            await EmailHelper.sendWelcomeEmail(email, name, password);
+            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, finalPassword);
 
             res.status(201).json({
                 success: true,
                 message: 'CEO account created successfully',
-                data: { id: userId, name, email, password }
+                data: { id: userId, name, email, password: finalPassword },
+                email_sent: emailStatus.success,
+                email_error: emailStatus.success ? null : emailStatus.error
             });
 
         } catch (error) {
@@ -303,23 +279,12 @@ class AdminController {
         }
     }
 
-    // Create new admin (super admin only)
-    static async createAdmin(req, res, next) {
-        try {
-            const { name, email, password, role } = req.body;
-
-            // Check if admin exists
-            const existingAdmin = await AdminModel.findByEmail(email);
-            if (existingAdmin) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'Email already registered'
-                });
-            }
+            // Generate auto-password if not provided
+            const finalPassword = password || Math.random().toString(36).slice(-10);
 
             // Hash password
             const salt = await bcrypt.genSalt(authConfig.bcryptSaltRounds);
-            const hashedPassword = await bcrypt.hash(password, salt);
+            const hashedPassword = await bcrypt.hash(finalPassword, salt);
 
             // Create admin
             const adminId = await AdminModel.create({
@@ -330,12 +295,14 @@ class AdminController {
             });
 
             // Send welcome email
-            await EmailHelper.sendWelcomeEmail(email, name, password);
+            const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, finalPassword);
 
             res.status(201).json({
                 success: true,
                 message: 'Admin created successfully',
-                admin: { id: adminId, name, email, role }
+                admin: { id: adminId, name, email, role },
+                email_sent: emailStatus.success,
+                email_error: emailStatus.success ? null : emailStatus.error
             });
 
         } catch (error) {

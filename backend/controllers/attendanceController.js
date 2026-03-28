@@ -146,7 +146,7 @@ class AttendanceController {
             // Calculate summary
             const summary = {
                 total_days: attendance.total,
-                present_days: attendance.data.filter(a => a.status === 'completed').length,
+                present_days: attendance.data.filter(a => a.status === 'completed' || a.status === 'checked_in').length,
                 incomplete_days: attendance.data.filter(a => a.status === 'checked_in').length,
                 total_hours: attendance.data.reduce((acc, curr) => {
                     if (curr.hours_worked) {
@@ -187,7 +187,7 @@ class AttendanceController {
                 0
             );
 
-            const attendanceDays = monthAttendance.data.filter(a => a.status === 'completed').length;
+            const attendanceDays = monthAttendance.data.filter(a => a.status === 'completed' || a.status === 'checked_in').length;
             const absentDays = monthAttendance.data.filter(a => a.status === 'absent').length;
             const leaveDays = monthAttendance.data.filter(a => a.status === 'leave').length;
             const incompleteDays = monthAttendance.data.filter(a => a.status === 'checked_in').length;

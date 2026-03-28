@@ -92,11 +92,12 @@ class AttendanceModel {
 
     // Get today's attendance status
     static async getTodayStatus(userId) {
+        const currentDate = moment().tz('Asia/Karachi').format('YYYY-MM-DD');
         const [rows] = await pool.query(
             `SELECT * FROM attendance 
-             WHERE user_id = ? AND date = CURDATE()
+             WHERE user_id = ? AND date = ?
              ORDER BY id DESC LIMIT 1`,
-            [userId]
+            [userId, currentDate]
         );
 
         if (rows.length === 0) {
@@ -141,7 +142,7 @@ class AttendanceModel {
              FROM attendance 
              WHERE user_id = ? 
                AND date BETWEEN ? AND ?
-             ORDER BY date DESC`,
+             ORDER BY date ASC`,
             [userId, actualStart.format('YYYY-MM-DD'), rangeEnd.format('YYYY-MM-DD')]
         );
 
@@ -156,10 +157,11 @@ class AttendanceModel {
             [userId, rangeEnd.format('YYYY-MM-DD'), actualStart.format('YYYY-MM-DD')]
         );
 
-        // 4. Map existing data for quick lookup
+        // 4. Map existing data for quick lookup (ensure date key is a simple string)
         const attendanceMap = new Map();
         attendanceRows.forEach(row => {
-            attendanceMap.set(moment(row.date).format('YYYY-MM-DD'), row);
+            const dateStr = moment(row.date).format('YYYY-MM-DD');
+            attendanceMap.set(dateStr, row);
         });
 
         // 5. Generate full history for the range

@@ -106,6 +106,20 @@ class AdminController {
         }
     }
 
+    // Create new user (admin)
+    static async createUser(req, res, next) {
+        try {
+            const { name, email, password, phone, cnic, address } = req.body;
+
+            // Check if user exists
+            const existingUser = await UserModel.findByEmail(email);
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email already registered'
+                });
+            }
+
             // Generate auto-password if not provided
             const finalPassword = password || Math.random().toString(36).slice(-8);
             
@@ -138,6 +152,20 @@ class AdminController {
             next(error);
         }
     }
+
+    // Create new HR user (admin only)
+    static async createHR(req, res, next) {
+        try {
+            const { name, email, password, phone, cnic, department, designation } = req.body;
+
+            // Check if user exists
+            const existingUser = await UserModel.findByEmail(email);
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email already registered'
+                });
+            }
 
             // Generate auto-password if not provided
             const finalPassword = password || Math.random().toString(36).slice(-10);
@@ -173,6 +201,20 @@ class AdminController {
             next(error);
         }
     }
+
+    // Create new CEO user (admin/HR)
+    static async createCEO(req, res, next) {
+        try {
+            const { name, email, password, phone, cnic, department, designation } = req.body;
+
+            // Check if user exists
+            const existingUser = await UserModel.findByEmail(email);
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email already registered'
+                });
+            }
 
             // Generate auto-password if not provided
             const finalPassword = password || Math.random().toString(36).slice(-10);
@@ -278,6 +320,20 @@ class AdminController {
             next(error);
         }
     }
+
+    // Create new admin (super admin only)
+    static async createAdmin(req, res, next) {
+        try {
+            const { name, email, password, role } = req.body;
+
+            // Check if admin exists
+            const existingAdmin = await AdminModel.findByEmail(email);
+            if (existingAdmin) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Email already registered'
+                });
+            }
 
             // Generate auto-password if not provided
             const finalPassword = password || Math.random().toString(36).slice(-10);

@@ -1,0 +1,242 @@
+.org-tree-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 40px;
+  min-width: max-content;
+  margin: 0 auto;
+}
+
+/* Hide scrollbar but keep scrolling */
+.org-tree-scroll-wrapper {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.org-tree-scroll-wrapper::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+.tree-node-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding: 0 10px; /* Reduced padding for more compactness */
+}
+
+.tree-node-card {
+  width: 160px; /* Ultra compact */
+  padding: 12px 10px;
+  background: linear-gradient(135deg, #6d28d9, #4f46e5);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px -5px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  z-index: 10;
+  cursor: pointer;
+  position: relative;
+}
+
+.tree-node-card:hover {
+  transform: translateY(-5px) scale(1.03);
+  box-shadow: 0 15px 35px -8px rgba(139, 92, 246, 0.5);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.card-glass-shine {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.tree-node-card:hover .card-glass-shine {
+  opacity: 1;
+}
+
+.avatar-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.avatar-ring {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 50%;
+  padding: 1.5px;
+  background: white;
+  opacity: 0.4;
+  transition: all 0.4s;
+}
+
+.tree-node-card:hover .avatar-ring {
+  opacity: 1;
+  transform: rotate(180deg);
+}
+
+.tree-node-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  margin-bottom: 6px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.tree-node-info h3 {
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+  color: white;
+  line-height: 1.2;
+}
+
+.tree-node-info p {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 4px;
+}
+
+.role-badge-premium {
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 8px;
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+}
+
+.role-manager-premium { background: rgba(255, 255, 255, 0.25); border-color: rgba(255, 255, 255, 0.4); }
+.role-hr-premium { background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.3); }
+.role-employee-premium { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
+
+/* --- Curved Elbow Connectors (Restored) --- */
+
+.tree-children {
+  display: flex;
+  justify-content: center;
+  position: relative;
+  padding-top: 40px; /* Vertical gap between tiers */
+}
+
+/* Parent Vertical Line (Down) to the midpoint */
+.tree-node-wrapper.has-children > .tree-node-card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  background: #64748b;
+  z-index: 1;
+}
+
+/* Every Child Vertical Line (Up) to the midpoint */
+.tree-node-wrapper:not(.org-tree-root) > .tree-node-card::before {
+  content: '';
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  width: 2px;
+  height: 20px;
+  background: #64748b;
+  z-index: 1;
+}
+
+/* Horizontal Connector segments for each child wrapper */
+.tree-node-wrapper:not(.org-tree-root)::before,
+.tree-node-wrapper:not(.org-tree-root)::after {
+  content: '';
+  position: absolute;
+  top: -20px;
+  width: 50%;
+  height: 20px;
+  border-top: 2px solid #64748b;
+  z-index: 0;
+}
+
+.tree-node-wrapper:not(.org-tree-root)::before {
+  left: 0;
+}
+
+.tree-node-wrapper:not(.org-tree-root)::after {
+  right: 0;
+}
+
+/* Edge Curves */
+.tree-node-wrapper:first-child:not(:only-child)::after {
+  border-left: 2px solid #64748b;
+  border-top-left-radius: 12px;
+  left: 50%;
+  width: 50%;
+}
+.tree-node-wrapper:first-child:not(:only-child)::before {
+  display: none;
+}
+
+.tree-node-wrapper:last-child:not(:only-child)::before {
+  border-right: 2px solid #64748b;
+  border-top-right-radius: 12px;
+  right: 50%;
+  width: 50%;
+}
+.tree-node-wrapper:last-child:not(:only-child)::after {
+  display: none;
+}
+
+/* Only child gets a straight vertical line */
+.tree-node-wrapper:only-child::before,
+.tree-node-wrapper:only-child::after {
+  display: none;
+}
+.tree-node-wrapper:only-child > .tree-node-card::before {
+  top: -40px;
+  height: 40px;
+  background: #64748b;
+}
+
+/* Single child vertical line optimization */
+
+.tree-node-wrapper:only-child > .tree-node-card::before {
+  background: #64748b; /* Ensure single child vertical line is also slate-gray */
+}
+
+/* Root node hide top connector */
+.org-tree-root > .tree-node-card::before {
+  display: none !important;
+}
+
+/* Animations */
+@keyframes premiumEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-tree-node {
+  animation: premiumEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}

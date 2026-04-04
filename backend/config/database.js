@@ -1,0 +1,41 @@
+const mysql = require('mysql2');
+require('dotenv').config();
+
+// Create connection pool
+const pool = mysql.createPool({
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT) || 3306,
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'attendance_management',
+    waitForConnections: true,
+    connectionLimit: 25,        // Increased from 10 to handle higher concurrency
+    maxIdle: 10,                // max idle connections, the default value is the same as `connectionLimit`
+    idleTimeout: 60000,         // idle connections timeout, in milliseconds, the default value 60000
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 10000,
+    connectTimeout: 10000,      // Optional timeout for connection establishment
+    ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : false
+});
+
+// Convert pool to use promises
+const promisePool = pool.promise();
+
+// Test database connection
+const testConnection = async () => {
+    try {
+        const connection = await promisePool.getConnection();
+        console.log('✅ Database connected successfully');
+        connection.release();
+        return true;
+    } catch (error) {
+        console.error('❌ Database connection failed:', error.message);
+        return false;
+    }
+};
+
+module.exports = {
+    pool: promisePool,
+    testConnection
+};

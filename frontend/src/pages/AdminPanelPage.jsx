@@ -39,7 +39,7 @@ const AdminPanelPage = () => {
     fetchDashboardStats();
   }, [fetchDashboardStats]);
 
-  const statCards = [
+  const statCards = React.useMemo(() => [
     {
       title: 'Total Users',
       value: stats?.total_users || 0,
@@ -68,7 +68,7 @@ const AdminPanelPage = () => {
       color: 'bg-red-500',
       link: '/admin/attendance'
     },
-  ];
+  ], [stats]);
 
   if (loading) {
     return (

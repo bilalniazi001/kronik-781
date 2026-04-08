@@ -1,9 +1,24 @@
 const AnnouncementModel = require('../models/AnnouncementModel');
+const CacheManager = require('../utils/cacheManager');
 
 // Get all announcements
 const getAllAnnouncements = async (req, res) => {
     try {
+        // Check cache
+        const cachedAnnouncements = CacheManager.get('ANNOUNCEMENTS_LIST');
+        if (cachedAnnouncements) {
+            return res.json({
+                success: true,
+                data: cachedAnnouncements,
+                from_cache: true
+            });
+        }
+
         const announcements = await AnnouncementModel.getAll();
+        
+        // Cache for 5 minutes
+        CacheManager.set('ANNOUNCEMENTS_LIST', announcements, 300);
+
         res.json({
             success: true,
             data: announcements
@@ -61,6 +76,10 @@ const createAnnouncement = async (req, res) => {
 
         const id = await AnnouncementModel.create(adminId, title, finalMessage);
 
+        // Invalidate cache
+        CacheManager.invalidate('ANNOUNCEMENTS_LIST');
+        CacheManager.invalidate('ANNOUNCEMENTS_LATEST_5');
+
         res.status(201).json({
             success: true,
             message: 'Announcement created successfully',
@@ -92,6 +111,10 @@ const updateAnnouncement = async (req, res) => {
 
         await AnnouncementModel.update(id, title, message);
 
+        // Invalidate cache
+        CacheManager.invalidate('ANNOUNCEMENTS_LIST');
+        CacheManager.invalidate('ANNOUNCEMENTS_LATEST_5');
+
         res.json({
             success: true,
             message: 'Announcement updated successfully'
@@ -121,6 +144,10 @@ const deleteAnnouncement = async (req, res) => {
 
         await AnnouncementModel.delete(id);
 
+        // Invalidate cache
+        CacheManager.invalidate('ANNOUNCEMENTS_LIST');
+        CacheManager.invalidate('ANNOUNCEMENTS_LATEST_5');
+
         res.json({
             success: true,
             message: 'Announcement deleted successfully'
@@ -139,7 +166,22 @@ const deleteAnnouncement = async (req, res) => {
 const getLatestAnnouncements = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 5;
+        const cacheKey = `ANNOUNCEMENTS_LATEST_${limit}`;
+
+        // Check cache
+        const cachedLatest = CacheManager.get(cacheKey);
+        if (cachedLatest) {
+            return res.json({
+                success: true,
+                data: cachedLatest,
+                from_cache: true
+            });
+        }
+
         const announcements = await AnnouncementModel.getLatest(limit);
+        
+        // Cache for 5 minutes
+        CacheManager.set(cacheKey, announcements, 300);
 
         res.json({
             success: true,

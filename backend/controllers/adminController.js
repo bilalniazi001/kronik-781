@@ -7,11 +7,22 @@ const LeaveBalanceModel = require('../models/LeaveBalanceModel');
 const authConfig = require('../config/auth');
 const { pool } = require('../config/database');
 const EmailHelper = require('../utils/emailHelper');
+const CacheManager = require('../utils/cacheManager');
 
 class AdminController {
     // Get dashboard stats
     static async getDashboard(req, res, next) {
         try {
+            // Check cache
+            const cachedStats = CacheManager.get('ADMIN_DASHBOARD_STATS');
+            if (cachedStats) {
+                return res.json({
+                    success: true,
+                    stats: cachedStats,
+                    from_cache: true
+                });
+            }
+
             // Get counts
             const [userCount] = await pool.query(
                 'SELECT COUNT(*) as total FROM users WHERE role = "user" AND status = "active"'
@@ -27,14 +38,19 @@ class AdminController {
                  WHERE date = CURDATE() AND check_in_time IS NOT NULL AND check_out_time IS NULL`
             );
 
+            const stats = {
+                total_users: userCount[0].total,
+                today_checked_in: todayAttendance[0].checked_in,
+                pending_checkout: pendingCheckout[0].pending,
+                not_checked_in: userCount[0].total - todayAttendance[0].checked_in
+            };
+
+            // Set cache (2 minutes)
+            CacheManager.set('ADMIN_DASHBOARD_STATS', stats, 120);
+
             res.json({
                 success: true,
-                stats: {
-                    total_users: userCount[0].total,
-                    today_checked_in: todayAttendance[0].checked_in,
-                    pending_checkout: pendingCheckout[0].pending,
-                    not_checked_in: userCount[0].total - todayAttendance[0].checked_in
-                }
+                stats
             });
 
         } catch (error) {
@@ -46,13 +62,23 @@ class AdminController {
     static async getUsers(req, res, next) {
         try {
             const { page = 1, limit = 10, search = '', role_type = '' } = req.query;
-            const offset = (parseInt(page) - 1) * parseInt(limit);
+            const cacheKey = `ADMIN_USERS_LIST_${page}_${limit}_${search}_${role_type}`;
+            
+            // Check cache
+            const cachedData = CacheManager.get(cacheKey);
+            if (cachedData) {
+                return res.json({
+                    success: true,
+                    ...cachedData,
+                    from_cache: true
+                });
+            }
 
+            const offset = (parseInt(page) - 1) * parseInt(limit);
             const users = await UserModel.getAll(parseInt(limit), offset, search, role_type);
             const total = await UserModel.getCount(search, role_type);
 
-            res.json({
-                success: true,
+            const responseData = {
                 users,
                 pagination: {
                     current_page: parseInt(page),
@@ -60,6 +86,14 @@ class AdminController {
                     total_records: total,
                     limit: parseInt(limit)
                 }
+            };
+
+            // Set cache (2 minutes)
+            CacheManager.set(cacheKey, responseData, 120);
+
+            res.json({
+                success: true,
+                ...responseData
             });
 
         } catch (error) {
@@ -145,6 +179,11 @@ class AdminController {
             // Send welcome email
             const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, password);
 
+            // Invalidate user-related caches
+            CacheManager.invalidate('ADMIN_DASHBOARD_STATS');
+            // We invalidate the first page of users list as it's the most common
+            CacheManager.invalidate('ADMIN_USERS_LIST_1_10__');
+
             res.status(201).json({
                 success: true,
                 message: 'User created successfully',
@@ -197,6 +236,10 @@ class AdminController {
 
             // Send welcome email
             const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, password);
+
+            // Invalidate user-related caches
+            CacheManager.invalidate('ADMIN_DASHBOARD_STATS');
+            CacheManager.invalidate('ADMIN_USERS_LIST_1_10__hr');
 
             res.status(201).json({
                 success: true,
@@ -251,6 +294,10 @@ class AdminController {
             // Send welcome email
             const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, password);
 
+            // Invalidate user-related caches
+            CacheManager.invalidate('ADMIN_DASHBOARD_STATS');
+            CacheManager.invalidate('ADMIN_USERS_LIST_1_10__ceo');
+
             res.status(201).json({
                 success: true,
                 message: 'CEO account created successfully',
@@ -295,6 +342,10 @@ class AdminController {
                 }
             }
 
+            // Invalidate caches
+            CacheManager.invalidate('ADMIN_DASHBOARD_STATS');
+            CacheManager.invalidate(`USER_PROFILE_${userId}`);
+
             res.json({
                 success: true,
                 message: 'User updated successfully'
@@ -313,6 +364,10 @@ class AdminController {
             const deleted = await UserModel.delete(userId);
 
             if (deleted) {
+                // Invalidate caches
+                CacheManager.invalidate('ADMIN_DASHBOARD_STATS');
+                CacheManager.invalidate(`USER_PROFILE_${userId}`);
+                
                 res.json({
                     success: true,
                     message: 'User deleted successfully'
@@ -332,7 +387,20 @@ class AdminController {
     // Get all admins (as per FDC 4.5.2 Section B)
     static async getAdmins(req, res, next) {
         try {
+            // Check cache
+            const cachedAdmins = CacheManager.get('ADMIN_ADMINS_LIST');
+            if (cachedAdmins) {
+                return res.json({
+                    success: true,
+                    admins: cachedAdmins,
+                    from_cache: true
+                });
+            }
+
             const admins = await AdminModel.getAll();
+            
+            // Cache for 2 minutes
+            CacheManager.set('ADMIN_ADMINS_LIST', admins, 120);
 
             res.json({
                 success: true,
@@ -380,6 +448,9 @@ class AdminController {
             // Send welcome email
             const emailStatus = await EmailHelper.sendWelcomeEmail(email, name, password);
 
+            // Invalidate admin cache
+            CacheManager.invalidate('ADMIN_ADMINS_LIST');
+
             res.status(201).json({
                 success: true,
                 message: 'Admin created successfully',
@@ -412,6 +483,10 @@ class AdminController {
             const updated = await AdminModel.update(adminId, updateData);
 
             if (updated) {
+                // Invalidate admin cache
+                CacheManager.invalidate('ADMIN_ADMINS_LIST');
+                CacheManager.invalidate(`USER_PROFILE_${adminId}`);
+
                 res.json({
                     success: true,
                     message: 'Admin updated successfully'
@@ -443,6 +518,10 @@ class AdminController {
             const deleted = await AdminModel.delete(adminId);
 
             if (deleted) {
+                // Invalidate cache
+                CacheManager.invalidate('ADMIN_ADMINS_LIST');
+                CacheManager.invalidate(`USER_PROFILE_${adminId}`);
+
                 res.json({
                     success: true,
                     message: 'Admin deleted successfully'

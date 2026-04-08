@@ -5,16 +5,30 @@ const AttendanceModel = require('../models/AttendanceModel');
 const AdminModel = require('../models/AdminModel');
 const { pool } = require('../config/database');
 const authConfig = require('../config/auth');
+const CacheManager = require('../utils/cacheManager');
 
 class UserController {
     // Get user profile (as per FDC 4.2.1)
     static async getProfile(req, res, next) {
         try {
+            const userId = req.userId;
+            const cacheKey = `USER_PROFILE_${userId}`;
+
+            // Check cache
+            const cachedProfile = CacheManager.get(cacheKey);
+            if (cachedProfile) {
+                return res.json({
+                    success: true,
+                    ...cachedProfile,
+                    from_cache: true
+                });
+            }
+
             // Use already fetched user from middleware or re-fetch depending on type
             let user = req.user;
 
             if (req.userType === 'user' && !user) {
-                user = await UserModel.findById(req.userId);
+                user = await UserModel.findById(userId);
             }
 
             if (!user) {
@@ -25,16 +39,14 @@ class UserController {
             }
 
             // Get user documents (only for regular users)
-            const documents = req.userType === 'user' ? await DocumentModel.getUserDocuments(req.userId) : [];
+            const documents = req.userType === 'user' ? await DocumentModel.getUserDocuments(userId) : [];
 
             // Get today's attendance status (only for regular users)
-            const todayAttendance = req.userType === 'user' ? await AttendanceModel.getTodayStatus(req.userId) : null;
+            const todayAttendance = req.userType === 'user' ? await AttendanceModel.getTodayStatus(userId) : null;
 
-            res.json({
-                success: true,
+            const responseData = {
                 user: {
                     ...user,
-                    // profile_image is now a Cloudinary URL stored directly in DB
                     profile_image: user?.profile_image || null
                 },
                 documents,
@@ -42,6 +54,14 @@ class UserController {
                 stats: {
                     total_documents: documents.length
                 }
+            };
+
+            // Cache for 5 minutes
+            CacheManager.set(cacheKey, responseData, 300);
+
+            res.json({
+                success: true,
+                ...responseData
             });
 
         } catch (error) {
@@ -88,6 +108,10 @@ class UserController {
                 if (phone) updateData.phone = phone;
                 const updated = await UserModel.update(userId, updateData);
                 if (updated) {
+                    // Invalidate cache
+                    CacheManager.invalidate(`USER_PROFILE_${userId}`);
+                    CacheManager.invalidate('ADMIN_USERS_LIST_1_10__');
+
                     const updatedUser = await UserModel.findById(userId);
                     res.json({ success: true, message: 'Profile updated successfully', user: updatedUser });
                 } else {
@@ -96,6 +120,10 @@ class UserController {
             } else {
                 const updated = await AdminModel.update(userId, updateData);
                 if (updated) {
+                    // Invalidate cache
+                    CacheManager.invalidate(`USER_PROFILE_${userId}`);
+                    CacheManager.invalidate('ADMIN_ADMINS_LIST');
+
                     const updatedAdmin = await AdminModel.findById(userId);
                     res.json({ success: true, message: 'Profile updated successfully', user: updatedAdmin });
                 } else {
@@ -150,6 +178,9 @@ class UserController {
                 await AdminModel.updatePassword(userId, hashedPassword);
             }
 
+            // Invalidate cache
+            CacheManager.invalidate(`USER_PROFILE_${userId}`);
+
             res.json({
                 success: true,
                 message: 'Password changed successfully'
@@ -181,6 +212,9 @@ class UserController {
             const profileImageUrl = req.file.path;
 
             await UserModel.update(req.userId, { profile_image: profileImageUrl });
+
+            // Invalidate cache
+            CacheManager.invalidate(`USER_PROFILE_${req.userId}`);
 
             res.json({
                 success: true,

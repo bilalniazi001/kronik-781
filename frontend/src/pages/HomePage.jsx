@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { useAlert } from '../hooks/useAlert';
@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import attendanceService from '../services/attendanceService';
 import { MapPinIcon, ClockIcon, CalendarDaysIcon, ArrowLeftOnRectangleIcon, LockClosedIcon, ArrowTrendingUpIcon } from '@heroicons/react/24/outline';
+import { optimizeCloudinaryUrl } from '../utils/constants';
 
 const HomePage = () => {
   const { user, isCEO } = useAuth();
@@ -215,6 +216,10 @@ const HomePage = () => {
     );
   };
 
+  const filteredHistory = useMemo(() => {
+    return history.filter(s => s.check_out_time && s.hours_worked && !String(s.hours_worked).includes('NaN'));
+  }, [history]);
+
   if (pageLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -237,7 +242,7 @@ const HomePage = () => {
           </div>
           {user?.profile_image && (
             <img
-              src={user.profile_image.startsWith('http') ? user.profile_image : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/${user.profile_image}`}
+              src={optimizeCloudinaryUrl(user.profile_image.startsWith('http') ? user.profile_image : `${import.meta.env.VITE_API_URL?.replace('/api', '')}/${user.profile_image}`)}
               alt={user.name}
               className="w-20 h-20 rounded-full border-4 border-white/30 object-cover"
               onError={(e) => { e.target.style.display = 'none'; }}
@@ -454,12 +459,11 @@ const HomePage = () => {
             )}
           </div>
           {/* Session History - only completed sessions with valid hours */}
-          {history.filter(s => s.check_out_time && s.hours_worked && !String(s.hours_worked).includes('NaN')).length > 0 && (
+          {filteredHistory.length > 0 && (
               <div className="mt-6">
                   <h3 className="text-lg font-bold text-gray-900 mb-3">Today's Sessions</h3>
                   <div className="space-y-2">
-                      {history
-                          .filter(s => s.check_out_time && s.hours_worked && !String(s.hours_worked).includes('NaN'))
+                      {filteredHistory
                           .map((sess, idx) => (
                               <div key={idx} className="bg-gray-50 border border-gray-100 p-3 rounded-xl flex justify-between items-center">
                                   <div>

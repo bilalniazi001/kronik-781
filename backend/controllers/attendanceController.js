@@ -5,6 +5,7 @@ const { getLocationDetails } = require('../utils/geolocationHelper');
 const AuthMiddleware = require('../middleware/authMiddleware');
 const SettingsModel = require('../models/SettingsModel');
 const moment = require('moment-timezone');
+const CacheManager = require('../utils/cacheManager');
 
 class AttendanceController {
     // Check In (as per FDC 4.3.2)
@@ -39,6 +40,10 @@ class AttendanceController {
                 longitude,
                 location_name: locationName
             });
+
+            // Invalidate caches so new check-in is reflected immediately
+            CacheManager.invalidate(`USER_STATS_${req.userId}`);
+            CacheManager.invalidate('ADMIN_DASHBOARD_STATS');
 
             res.json({
                 success: true,
@@ -83,6 +88,10 @@ class AttendanceController {
                 longitude,
                 location_name: locationName
             });
+
+            // Invalidate caches so check-out is reflected immediately
+            CacheManager.invalidate(`USER_STATS_${req.userId}`);
+            CacheManager.invalidate('ADMIN_DASHBOARD_STATS');
 
             res.json({
                 success: true,
@@ -192,6 +201,17 @@ class AttendanceController {
     static async getUserStats(req, res, next) {
         try {
             const moment = require('moment-timezone');
+
+            // Check cache first (2 minutes TTL)
+            const cacheKey = `USER_STATS_${req.userId}`;
+            const cachedStats = CacheManager.get(cacheKey);
+            if (cachedStats) {
+                return res.json({
+                    success: true,
+                    stats: cachedStats,
+                    from_cache: true
+                });
+            }
             const now = moment().tz('Asia/Karachi');
 
             const currentMonth = now.month() + 1;
@@ -283,18 +303,23 @@ class AttendanceController {
                 }
             });
 
+            const statsData = {
+                attendance_days: attendanceDays,
+                absent_days: absentDays,
+                leave_days: leaveDays,
+                incomplete_days: incompleteDays,
+                weekly_hours: `${Math.floor(weeklyMinutes / 60).toString().padStart(2, '0')}:${(weeklyMinutes % 60).toString().padStart(2, '0')}`,
+                weekly_extra_hours: `${Math.floor(weeklyExtraMinutes / 60).toString().padStart(2, '0')}:${(weeklyExtraMinutes % 60).toString().padStart(2, '0')}`,
+                recent_leaves: recentLeaves,
+                history: historyRows
+            };
+
+            // Cache the stats for 2 minutes
+            CacheManager.set(cacheKey, statsData, 120);
+
             res.json({
                 success: true,
-                stats: {
-                    attendance_days: attendanceDays,
-                    absent_days: absentDays,
-                    leave_days: leaveDays,
-                    incomplete_days: incompleteDays,
-                    weekly_hours: `${Math.floor(weeklyMinutes / 60).toString().padStart(2, '0')}:${(weeklyMinutes % 60).toString().padStart(2, '0')}`,
-                    weekly_extra_hours: `${Math.floor(weeklyExtraMinutes / 60).toString().padStart(2, '0')}:${(weeklyExtraMinutes % 60).toString().padStart(2, '0')}`,
-                    recent_leaves: recentLeaves,
-                    history: historyRows
-                }
+                stats: statsData
             });
 
         } catch (error) {

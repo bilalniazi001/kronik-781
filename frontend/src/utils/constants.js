@@ -35,3 +35,22 @@ export const PAGINATION = {
   DEFAULT_LIMIT: 10,
   LIMIT_OPTIONS: [10, 25, 50, 100],
 };
+
+/**
+ * Optimizes a Cloudinary URL by adding q_auto and f_auto parameters.
+ * @param {string} url - The original Cloudinary URL.
+ * @returns {string} - The optimized URL.
+ */
+export const optimizeCloudinaryUrl = (url) => {
+  if (!url || typeof url !== 'string' || !url.includes('cloudinary.com')) return url;
+  
+  // Check if it's already optimized
+  if (url.includes('q_auto') && url.includes('f_auto')) return url;
+  
+  // Insert q_auto,f_auto after /upload/
+  if (url.includes('/upload/')) {
+    return url.replace('/upload/', '/upload/q_auto,f_auto/');
+  }
+  
+  return url;
+};
